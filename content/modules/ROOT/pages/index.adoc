@@ -1,22 +1,20 @@
 = Home
 
-This Helm workshop is designed to help you make better use of Helm in your Kubernetes deployments.
+This workshop is designed to help you [describe the workshop's purpose and goals].
 
 == Prerequisites
 
 This workshop assumes the following:
 
-* You have basic familiarity with what Helm is and what it does.
-* You have experience running a Helm chart in your own Kubernetes cluster.
+* [Prerequisite 1]
+* [Prerequisite 2]
 
-If you are new to Helm, we recommend reviewing the https://helm.sh/docs/[official Helm documentation] before proceeding.
+If you are new to [topic], we recommend reviewing the [relevant documentation] before proceeding.
 
 == Expectations
 
 After completing this workshop, you will be able to:
 
-* Create and install a Helm chart.
-
-* Perform basic and advanced templating of resources.
-
-* Package a Helm chart as a set of files or an OCI artifact.
+* [Learning objective 1]
+* [Learning objective 2]
+* [Learning objective 3]

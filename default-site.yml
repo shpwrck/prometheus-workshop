@@ -1,7 +1,7 @@
 ---
 site:
-  title: Helm Workshop
-  url: "https://helm.sh"
+  title: Workshop Template
+  url: "https://example.com"
   start_page: modules::index.adoc
 
 content:

@@ -6,7 +6,7 @@ nav:
 
 asciidoc:
   attributes:
-    lab_name: "Helm Workshop"
+    lab_name: "Workshop Template"
     release-version: master
     page-pagination: true
     page-links: []

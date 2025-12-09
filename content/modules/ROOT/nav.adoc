@@ -1,12 +1,12 @@
 * xref:index.adoc[Introduction]
-* Module 1: Background and Review
+* Module 1: [Module 1 Title]
   ** xref:module-01-content.adoc[Content]
-* Module 2: Helm CLI
+* Module 2: [Module 2 Title]
   ** xref:module-02-content.adoc[Content]
   ** xref:module-02-exercises.adoc[Exercises]
-* Module 3: File Structure and Templating
+* Module 3: [Module 3 Title]
   ** xref:module-03-content.adoc[Content]
   ** xref:module-03-exercises.adoc[Exercises]
-* Module 4: Storage and Distribution of Charts
+* Module 4: [Module 4 Title]
   ** xref:module-04-content.adoc[Content]
   ** xref:module-04-exercises.adoc[Exercises]
