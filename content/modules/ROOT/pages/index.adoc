@@ -1,20 +1,33 @@
-= Home
+= Prometheus Query Workshop
 
-This workshop is designed to help you [describe the workshop's purpose and goals].
+This workshop is designed to help you become proficient with Prometheus Query Language (PromQL). You will learn how to write effective queries to extract meaningful insights from your metrics data, from basic selectors to advanced aggregation patterns.
+
+== Workshop Structure
+
+This workshop consists of four modules:
+
+* *Module 1: Prometheus Query Language Fundamentals* - Learn the basics of PromQL, including metric names, labels, data types, and basic query syntax
+* *Module 2: Selectors and Filtering* - Master label selectors, regular expressions, and filtering techniques (includes exercises)
+* *Module 3: Aggregation Functions* - Understand how to use aggregation functions like sum, average, quantiles, and top-k (includes exercises)
+* *Module 4: Advanced Query Patterns* - Explore rate functions, subqueries, logical operators, and optimization techniques (includes exercises)
 
 == Prerequisites
 
 This workshop assumes the following:
 
-* [Prerequisite 1]
-* [Prerequisite 2]
+* Basic understanding of Prometheus concepts (metrics, labels, time series)
+* Access to an OpenShift 4.16 cluster with Prometheus installed
+* Ability to access the Prometheus web UI or use the Prometheus API
+* Familiarity with basic command-line operations
 
-If you are new to [topic], we recommend reviewing the [relevant documentation] before proceeding.
+If you are new to Prometheus, we recommend reviewing the https://prometheus.io/docs/introduction/overview/[Prometheus documentation] before proceeding.
 
 == Expectations
 
 After completing this workshop, you will be able to:
 
-* [Learning objective 1]
-* [Learning objective 2]
-* [Learning objective 3]
+* Write basic PromQL queries using selectors and filters
+* Apply aggregation functions to summarize metrics across multiple time series
+* Construct advanced queries using rate functions, subqueries, and logical operators
+* Debug and optimize Prometheus queries for better performance
+* Use PromQL effectively in Grafana dashboards and alerting rules

@@ -1,4 +1,203 @@
-= [Module 1 Title]
+= Prometheus Query Language Fundamentals
 :hardbreaks-option:
 
-[Add your module 1 content here]
+This module introduces you to the fundamentals of Prometheus Query Language (PromQL). You will learn the basic concepts, data types, and syntax needed to write effective Prometheus queries.
+
+== Understanding Prometheus Metrics
+
+Prometheus stores metrics as time series data. Each time series is identified by a metric name and a set of key-value pairs called labels.
+
+=== Metric Names
+
+Metric names describe what is being measured. They must follow these rules:
+
+* Contain only letters, digits, underscores, and colons
+* Start with a letter or underscore
+* Cannot be reserved keywords
+
+Examples of valid metric names:
+
+* `http_requests_total`
+* `node_cpu_seconds_total`
+* `container_memory_usage_bytes`
+
+=== Labels
+
+Labels are key-value pairs that provide additional dimensions to your metrics. They allow you to filter and aggregate data.
+
+Common label examples:
+
+* `instance` - The target being monitored
+* `job` - The job name that collected the metric
+* `namespace` - Kubernetes namespace (in OpenShift)
+* `pod` - Kubernetes pod name
+* `container` - Container name
+
+== Basic Query Syntax
+
+A PromQL query consists of a metric name, optionally followed by label selectors in curly braces. '{}'
+
+=== Simple Metric Selection
+
+To select all time series for a metric:
+
+[source,promql]
+----
+http_requests_total
+----
+
+This returns all time series with the metric name `http_requests_total`.
+
+=== Label Selectors
+
+Label selectors filter time series by matching label values. Use curly braces `{}` to specify label filters.
+
+Select all HTTP requests for a specific instance:
+
+[source,promql]
+----
+http_requests_total{instance="localhost:9090"}
+----
+
+=== Label Matching Operators
+
+PromQL supports several matching operators:
+
+* `=` - Exact match
+* `!=` - Not equal
+* `=~` - Regular expression match
+* `!~` - Regular expression not match
+
+Examples:
+
+[source,promql]
+----
+# Exact match
+http_requests_total{method="GET"}
+
+# Not equal
+http_requests_total{method!="GET"}
+
+# Regular expression match
+http_requests_total{method=~"GET|POST"}
+
+# Regular expression not match
+http_requests_total{method!~"GET|POST"}
+----
+
+== Data Types
+
+PromQL has four main data types:
+
+=== Instant Vector
+
+An instant vector is a set of time series, each containing a single sample at a given timestamp. This is the most common result type.
+
+Example:
+
+[source,promql]
+----
+http_requests_total{method="GET"}
+----
+
+=== Range Vector
+
+A range vector is a set of time series, each containing a range of data points over time. Range vectors are used with functions like `rate()`. '[]' is used to specify the time range.
+
+Example:
+
+[source,promql]
+----
+http_requests_total{method="GET"}[5m]
+----
+
+=== Scalar
+
+A scalar is a simple numeric floating-point value.
+
+=== String
+
+A string is a simple string value (used primarily for labels).
+
+== Time Ranges
+
+When working with range vectors, you specify a time range using duration syntax:
+
+* `s` - seconds
+* `m` - minutes
+* `h` - hours
+* `d` - days
+* `w` - weeks
+* `y` - years
+
+Examples:
+
+[source,promql]
+----
+# Last 5 minutes
+http_requests_total[5m]
+
+# Last 1 hour
+http_requests_total[1h]
+
+# Last 2 days
+http_requests_total[2d]
+----
+
+== Accessing Prometheus in OpenShift
+
+In OpenShift 4.16, you can access Prometheus through the web console or via the API.
+
+=== Accessing the Prometheus Web UI
+
+1. Log in to your OpenShift cluster web console
+2. Navigate to the `openshift-monitoring` namespace
+3. Find the Prometheus service or route
+4. Access the Prometheus UI
+
+Alternatively, you can port-forward to the Prometheus service:
+
+[source,bash]
+----
+oc port-forward -n openshift-monitoring svc/prometheus-k8s 9090:9090
+----
+
+Then access Prometheus at `http://localhost:9090`.
+
+=== Using the Prometheus API
+
+You can query Prometheus programmatically using its HTTP API:
+
+[source,bash]
+----
+# Get an authentication token
+TOKEN=$(oc whoami -t)
+
+# Query Prometheus API
+curl -H "Authorization: Bearer $TOKEN" \
+  "https://prometheus-k8s-openshift-monitoring.apps.<cluster-domain>/api/v1/query?query=http_requests_total"
+----
+
+== Common Built-in Metrics in OpenShift
+
+OpenShift 4.16 exposes many useful metrics. Here are some common ones:
+
+* `container_cpu_usage_seconds_total` - CPU usage per container
+* `container_memory_usage_bytes` - Memory usage per container
+* `kube_pod_info` - Pod information
+* `kube_node_info` - Node information
+* `openshift_build_info` - Build information
+* `cluster:capacity_cpu_cores:sum` - Total CPU capacity
+
+== Summary
+
+In this module, you learned:
+
+* The structure of Prometheus metrics (metric names and labels)
+* Basic PromQL query syntax
+* Label selectors and matching operators
+* PromQL data types (instant vector, range vector, scalar, string)
+* How to specify time ranges
+* How to access Prometheus in OpenShift 4.16
+
+In the next module, you will learn more advanced selector techniques and filtering patterns.

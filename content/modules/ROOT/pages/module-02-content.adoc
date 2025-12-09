@@ -1,4 +1,223 @@
-= [Module 2 Title]
+= Selectors and Filtering
 :hardbreaks-option:
 
-[Add your module 2 content here]
+This module covers advanced selector techniques and filtering patterns in PromQL. You will learn how to combine multiple label selectors, use regular expressions effectively, and filter time series based on label values.
+
+== Combining Multiple Label Selectors
+
+You can combine multiple label selectors in a single query. All selectors must match for a time series to be included.
+
+=== AND Logic (Default)
+
+When you specify multiple label selectors, they are combined with AND logic:
+
+[source,promql]
+----
+http_requests_total{method="GET", status="200"}
+----
+
+This query returns time series where both `method="GET"` AND `status="200"`.
+
+=== Complex Selector Examples
+
+[source,promql]
+----
+# Multiple exact matches
+container_memory_usage_bytes{namespace="default", pod=~"web-.*"}
+
+# Mix of exact and regex matches
+kube_pod_info{namespace="production", node!~"worker-0.*"}
+----
+
+== Regular Expression Patterns
+
+Regular expressions are powerful tools for matching patterns in label values.
+
+=== Basic Regex Patterns
+
+[source,promql]
+----
+# Match any pod starting with "web-"
+kube_pod_info{pod=~"web-.*"}
+
+# Match pods ending with "-prod"
+kube_pod_info{pod=~".*-prod"}
+
+# Match pods containing "api"
+kube_pod_info{pod=~".*api.*"}
+----
+
+=== Anchored Regex Patterns
+
+Use `^` for start anchor and `$` for end anchor:
+
+[source,promql]
+----
+# Must start with "web-"
+kube_pod_info{pod=~"^web-.*"}
+
+# Must end with "-v1"
+kube_pod_info{pod=~".*-v1$"}
+
+# Exact match using anchors
+kube_pod_info{pod=~"^web-server-v1$"}
+----
+
+=== Character Classes
+
+[source,promql]
+----
+# Match any digit
+kube_pod_info{pod=~".*-v[0-9]+"}
+
+# Match specific characters
+kube_pod_info{namespace=~"^(dev|staging|prod)$"}
+----
+
+== Filtering by Label Existence
+
+You can check if a label exists or doesn't exist using the `label_replace` function or by using negative regex patterns.
+
+=== Checking for Label Presence
+
+While PromQL doesn't have a direct "label exists" operator, you can use workarounds:
+
+[source,promql]
+----
+# This will only match if the label exists and has a value
+# (empty string values won't match)
+container_memory_usage_bytes{container!=""}
+----
+
+== Negative Filtering
+
+Use the `!=` and `!~` operators to exclude specific values.
+
+=== Excluding Specific Values
+
+[source,promql]
+----
+# Exclude a specific namespace
+container_cpu_usage_seconds_total{namespace!="kube-system"}
+
+# Exclude multiple values using regex
+container_cpu_usage_seconds_total{namespace!~"kube-system|openshift-.*"}
+----
+
+== Working with OpenShift-Specific Labels
+
+OpenShift 4.16 adds several useful labels to metrics. Understanding these helps you write effective queries.
+
+=== Common OpenShift Labels
+
+* `namespace` - The Kubernetes namespace
+* `pod` - The pod name
+* `container` - The container name
+* `node` - The node name
+* `deployment` - The deployment name
+* `replicaset` - The replica set name
+* `service` - The service name
+
+=== Filtering by Namespace
+
+[source,promql]
+----
+# All metrics in a specific namespace
+container_memory_usage_bytes{namespace="my-app"}
+
+# All metrics except system namespaces
+container_memory_usage_bytes{namespace!~"kube-.*|openshift-.*"}
+----
+
+=== Filtering by Pod Patterns
+
+[source,promql]
+----
+# All pods for a specific deployment
+kube_pod_info{deployment="web-server", namespace="production"}
+
+# Pods matching a naming pattern
+container_cpu_usage_seconds_total{pod=~"web-server-.*"}
+----
+
+== Combining Queries with Operators
+
+You can combine multiple queries using arithmetic and comparison operators.
+
+=== Arithmetic Operators
+
+[source,promql]
+----
+# Add two metrics
+container_memory_usage_bytes{namespace="app1"} + container_memory_usage_bytes{namespace="app2"}
+
+# Multiply by a scalar
+container_memory_usage_bytes{namespace="my-app"} * 1024
+----
+
+=== Comparison Operators
+
+Comparison operators return 1 for true, 0 for false:
+
+[source,promql]
+----
+# Find containers using more than 1GB of memory
+container_memory_usage_bytes > 1073741824
+
+# Find containers using less than 100MB
+container_memory_usage_bytes < 104857600
+----
+
+== Best Practices for Selectors
+
+=== Use Specific Selectors
+
+Be as specific as possible to reduce query execution time:
+
+[source,promql]
+----
+# Good: Specific namespace and pod pattern
+container_memory_usage_bytes{namespace="production", pod=~"web-.*"}
+
+# Less efficient: Too broad
+container_memory_usage_bytes
+----
+
+=== Optimize Regex Patterns
+
+Simple regex patterns are faster than complex ones:
+
+[source,promql]
+----
+# Good: Simple prefix match
+pod=~"web-.*"
+
+# Less efficient: Complex pattern
+pod=~".*web.*server.*v[0-9]+.*"
+----
+
+=== Avoid Overly Broad Negations
+
+Negative selectors can be expensive. Use positive matches when possible:
+
+[source,promql]
+----
+# Better: Positive match
+container_memory_usage_bytes{namespace="my-app"}
+
+# Less efficient: Negative match (if you have many namespaces)
+container_memory_usage_bytes{namespace!="kube-system"}
+----
+
+== Summary
+
+In this module, you learned:
+
+* How to combine multiple label selectors
+* Regular expression patterns and their usage
+* Filtering by label existence and exclusion
+* OpenShift-specific labels and how to use them
+* Combining queries with operators
+* Best practices for writing efficient selectors
+
+In the next module, you will learn about aggregation functions, which allow you to summarize data across multiple time series.
