@@ -1,4 +1,7 @@
 * xref:index.adoc[Introduction]
+ifdef::openshift-102-showroom[]
+* xref:master@openshift-102:ROOT:cli-tools.adoc[Shared CLI tools]
+endif::[]
 * Module 1: Prometheus Query Language Fundamentals
   ** xref:module-01-content.adoc[Content]
 * Module 2: Selectors and Filtering

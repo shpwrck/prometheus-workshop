@@ -2,6 +2,10 @@
 
 This workshop is designed to help you become proficient with Prometheus Query Language (PromQL). You will learn how to write effective queries to extract meaningful insights from your metrics data, from basic selectors to advanced aggregation patterns.
 
+ifdef::openshift-102-showroom[]
+include::openshift-102:ROOT:partial$cli-tools-container.adoc[]
+endif::[]
+
 == Workshop Structure
 
 This workshop consists of four modules:
