@@ -299,8 +299,8 @@ container_memory_usage_bytes{namespace="default"}
 # Step 3: Add aggregation
 sum(container_memory_usage_bytes{namespace="default"})
 
-# Step 4: Add rate (if applicable)
-sum(rate(container_memory_usage_bytes{namespace="default"}[5m]))
+# Step 4: Add a function (memory is a gauge, so use deriv() rather than rate())
+sum(deriv(container_memory_usage_bytes{namespace="default"}[5m]))
 ----
 
 === Step 3: Validate Label Values

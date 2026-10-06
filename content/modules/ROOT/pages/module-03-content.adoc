@@ -163,6 +163,7 @@ quantile(0.50, container_cpu_usage_seconds_total) by (node)
 ----
 
 Common quantile values:
+
 * `0.50` - Median
 * `0.90` - 90th percentile
 * `0.95` - 95th percentile

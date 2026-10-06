@@ -8,17 +8,17 @@ In this exercise, you will practice writing queries with label selectors to filt
 === Step 1: Access Prometheus
 
 1. Open a terminal and authenticate to your OpenShift cluster:
-
++
 [source,bash]
 ----
 oc login <your-cluster-url>
 ----
 
-2. Port-forward to the Prometheus service:
-
+2. Port-forward to a Prometheus pod:
++
 [source,bash]
 ----
-oc port-forward -n openshift-monitoring svc/prometheus-k8s 9090:9090
+oc port-forward -n openshift-monitoring pod/prometheus-k8s-0 9090:9090
 ----
 
 3. Open your browser and navigate to `http://localhost:9090`
@@ -67,11 +67,11 @@ kube_pod_info{pod=~".*-v[0-9]+.*"}
 
 === Step 2: Match Specific Deployment Pattern
 
-Find all pods that belong to deployments with names matching the pattern "app-*-prod":
+Find all pods that belong to deployments with names matching the pattern "app-*-prod". `kube_pod_info` has no `deployment` label, but a Deployment's pods are created by a ReplicaSet named `<deployment>-<hash>`:
 
 [source,promql]
 ----
-kube_pod_info{deployment=~"^app-.*-prod$"}
+kube_pod_info{created_by_kind="ReplicaSet", created_by_name=~"app-.*-prod-.*"}
 ----
 
 === Step 3: Exclude Test and Dev Environments

@@ -22,7 +22,7 @@ This query returns time series where both `method="GET"` AND `status="200"`.
 
 [source,promql]
 ----
-# Multiple exact matches
+# Exact match combined with a regex match
 container_memory_usage_bytes{namespace="default", pod=~"web-.*"}
 
 # Mix of exact and regex matches
@@ -49,7 +49,7 @@ kube_pod_info{pod=~".*api.*"}
 
 === Anchored Regex Patterns
 
-Use `^` for start anchor and `$` for end anchor:
+PromQL regex matchers are always fully anchored, so `pod=~"web"` matches only the exact value `web`. Adding `^` and `$` is allowed but does not change the result; these queries behave the same as their unanchored equivalents:
 
 [source,promql]
 ----
@@ -70,13 +70,13 @@ kube_pod_info{pod=~"^web-server-v1$"}
 # Match any digit
 kube_pod_info{pod=~".*-v[0-9]+"}
 
-# Match specific characters
+# Match one of several values (alternation)
 kube_pod_info{namespace=~"^(dev|staging|prod)$"}
 ----
 
 == Filtering by Label Existence
 
-You can check if a label exists or doesn't exist using the `label_replace` function or by using negative regex patterns.
+You can check if a label exists or doesn't exist by comparing it with an empty string: `{label!=""}` matches series that have the label, and `{label=""}` matches series that don't.
 
 === Checking for Label Presence
 
@@ -114,8 +114,8 @@ OpenShift 4.16 adds several useful labels to metrics. Understanding these helps 
 * `pod` - The pod name
 * `container` - The container name
 * `node` - The node name
-* `deployment` - The deployment name
-* `replicaset` - The replica set name
+* `deployment` - The deployment name (on `kube_deployment_*` metrics)
+* `replicaset` - The replica set name (on `kube_replicaset_*` metrics)
 * `service` - The service name
 
 === Filtering by Namespace
@@ -133,8 +133,9 @@ container_memory_usage_bytes{namespace!~"kube-.*|openshift-.*"}
 
 [source,promql]
 ----
-# All pods for a specific deployment
-kube_pod_info{deployment="web-server", namespace="production"}
+# All pods for a specific deployment (kube_pod_info has no deployment label;
+# a Deployment's pods are created by a ReplicaSet named <deployment>-<hash>)
+kube_pod_info{created_by_kind="ReplicaSet", created_by_name=~"web-server-.*", namespace="production"}
 
 # Pods matching a naming pattern
 container_cpu_usage_seconds_total{pod=~"web-server-.*"}
@@ -149,7 +150,7 @@ You can combine multiple queries using arithmetic and comparison operators.
 [source,promql]
 ----
 # Add two metrics
-container_memory_usage_bytes{namespace="app1"} + container_memory_usage_bytes{namespace="app2"}
+sum(container_memory_usage_bytes{namespace="app1"}) + sum(container_memory_usage_bytes{namespace="app2"})
 
 # Multiply by a scalar
 container_memory_usage_bytes{namespace="my-app"} * 1024
@@ -157,7 +158,7 @@ container_memory_usage_bytes{namespace="my-app"} * 1024
 
 === Comparison Operators
 
-Comparison operators return 1 for true, 0 for false:
+Comparison operators filter the results, keeping only the time series for which the comparison is true (add the `bool` modifier to return 1 for true, 0 for false instead):
 
 [source,promql]
 ----

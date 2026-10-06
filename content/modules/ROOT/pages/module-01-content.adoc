@@ -35,7 +35,7 @@ Common label examples:
 
 == Basic Query Syntax
 
-A PromQL query consists of a metric name, optionally followed by label selectors in curly braces. '{}'
+A PromQL query consists of a metric name, optionally followed by label selectors in curly braces `{}`.
 
 === Simple Metric Selection
 
@@ -102,7 +102,7 @@ http_requests_total{method="GET"}
 
 === Range Vector
 
-A range vector is a set of time series, each containing a range of data points over time. Range vectors are used with functions like `rate()`. '[]' is used to specify the time range.
+A range vector is a set of time series, each containing a range of data points over time. Range vectors are used with functions like `rate()`. `[]` is used to specify the time range.
 
 Example:
 
@@ -155,11 +155,11 @@ In OpenShift 4.16, you can access Prometheus through the web console or via the 
 3. Find the Prometheus service or route
 4. Access the Prometheus UI
 
-Alternatively, you can port-forward to the Prometheus service:
+Alternatively, you can port-forward to a Prometheus pod (the `prometheus-k8s` service does not expose port 9090):
 
 [source,bash]
 ----
-oc port-forward -n openshift-monitoring svc/prometheus-k8s 9090:9090
+oc port-forward -n openshift-monitoring pod/prometheus-k8s-0 9090:9090
 ----
 
 Then access Prometheus at `http://localhost:9090`.

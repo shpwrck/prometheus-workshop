@@ -145,7 +145,7 @@ container_memory_usage_bytes and container_cpu_usage_seconds_total
 
 === OR Operator
 
-The `or` operator returns all time series from both sides:
+The `or` operator returns all time series from the left-hand side, plus those from the right-hand side that have no matching time series on the left-hand side:
 
 [source,promql]
 ----
