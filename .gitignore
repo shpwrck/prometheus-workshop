@@ -36,3 +36,7 @@ package-lock.json
 
 # Ignore yarn.lock for Yarn
 yarn.lock
+
+# Ignore Antora Assembler workspace and bundled gems (PDF build)
+build/
+vendor/bundle/
