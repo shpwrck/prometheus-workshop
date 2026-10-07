@@ -105,7 +105,7 @@ Subqueries allow you to evaluate an instant query at regular intervals over a ti
 
 === Basic Subquery Syntax
 
-[source,promql]
+[source,text]
 ----
 <instant_query>[<range>:<resolution>]
 ----
@@ -135,12 +135,12 @@ Logical operators allow you to combine multiple conditions in queries.
 
 === AND Operator
 
-The `and` operator returns the left-hand side if the right-hand side has a matching time series:
+The `and` operator returns the left-hand side if the right-hand side has a matching time series. Series match only when all their labels are equal; `container_cpu_usage_seconds_total` has an extra `cpu` label, so the examples use `ignoring(cpu)` to leave it out of the comparison:
 
 [source,promql]
 ----
 # Memory usage only for containers that also have CPU metrics
-container_memory_usage_bytes and container_cpu_usage_seconds_total
+container_memory_usage_bytes and ignoring(cpu) container_cpu_usage_seconds_total
 ----
 
 === OR Operator
@@ -160,7 +160,7 @@ The `unless` operator returns the left-hand side if the right-hand side has no m
 [source,promql]
 ----
 # Memory usage for containers without CPU metrics
-container_memory_usage_bytes unless container_cpu_usage_seconds_total
+container_memory_usage_bytes unless ignoring(cpu) container_cpu_usage_seconds_total
 ----
 
 == Time-Based Functions
@@ -273,17 +273,17 @@ label_join(
 
 == Advanced Patterns for OpenShift
 
-=== CPU Utilization Percentage
+=== CPU Usage as a Percentage of One Core
 
-Calculate CPU utilization as a percentage:
+Calculate CPU usage as a percentage of one CPU core. A value of 100 means one fully used core; it is not a percentage of the node's capacity or of the container's CPU limit:
 
 [source,promql]
 ----
-# CPU utilization per container
-100 * rate(container_cpu_usage_seconds_total[5m])
+# CPU usage per container, as a percentage of one core
+100 * rate(container_cpu_usage_seconds_total{container!="", container!="POD"}[5m])
 
-# Average CPU utilization per namespace
-avg(100 * rate(container_cpu_usage_seconds_total[5m])) by (namespace)
+# Average CPU usage per container in each namespace, as a percentage of one core
+avg(100 * rate(container_cpu_usage_seconds_total{container!="", container!="POD"}[5m])) by (namespace)
 ----
 
 === Memory Utilization Percentage
@@ -292,19 +292,19 @@ Calculate memory utilization relative to limits:
 
 [source,promql]
 ----
-# Memory utilization percentage (if limits are available)
-100 * container_memory_usage_bytes / container_spec_memory_limit_bytes
+# Memory usage as a percentage of the limit, only for containers that have a memory limit
+100 * container_memory_working_set_bytes{container!=""} / (container_spec_memory_limit_bytes{container!=""} > 0)
 ----
 
 === Request Rate with Error Rate
 
-Calculate error rates:
+Calculate error rates, here for requests to the Kubernetes API server. Resources that have never returned a `5xx` response do not appear in the result:
 
 [source,promql]
 ----
-# Error rate as percentage of total requests
-100 * sum(rate(http_requests_total{status=~"5.."}[5m])) by (service) /
-  sum(rate(http_requests_total[5m])) by (service)
+# Error rate as percentage of total requests, per resource
+100 * sum(rate(apiserver_request_total{code=~"5.."}[5m])) by (resource) /
+  sum(rate(apiserver_request_total[5m])) by (resource)
 ----
 
 === Pod Restart Rate
@@ -319,13 +319,13 @@ rate(kube_pod_container_status_restarts_total[5m])
 
 === Resource Quota Usage
 
-Monitor resource quota usage:
+Monitor how much of each namespace's memory-request quota is in use. Only namespaces with a ResourceQuota that sets `requests.memory` appear in the result:
 
 [source,promql]
 ----
-# Memory quota usage percentage
-100 * sum(container_memory_usage_bytes) by (namespace) /
-  kube_resourcequota{resource="requests.memory", type="used"}
+# Requested memory as a percentage of the requests.memory quota
+100 * sum by (namespace) (kube_resourcequota{resource="requests.memory", type="used"}) /
+  sum by (namespace) (kube_resourcequota{resource="requests.memory", type="hard"})
 ----
 
 == Query Optimization

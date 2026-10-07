@@ -3,6 +3,8 @@
 
 This module covers advanced selector techniques and filtering patterns in PromQL. You will learn how to combine multiple label selectors, use regular expressions effectively, and filter time series based on label values.
 
+NOTE: Several examples in this module use placeholder namespaces and pod names, such as `production`, `my-app` or `web-server`, to illustrate label matching. They return no data on a new cluster. Replace them with your own project and pod names, or with a namespace that exists on every cluster, such as `openshift-monitoring`.
+
 == Combining Multiple Label Selectors
 
 You can combine multiple label selectors in a single query. All selectors must match for a time series to be included.
@@ -13,20 +15,20 @@ When you specify multiple label selectors, they are combined with AND logic:
 
 [source,promql]
 ----
-http_requests_total{method="GET", status="200"}
+apiserver_request_total{verb="GET", code="200"}
 ----
 
-This query returns time series where both `method="GET"` AND `status="200"`.
+This query returns time series where both `verb="GET"` AND `code="200"`.
 
 === Complex Selector Examples
 
 [source,promql]
 ----
 # Exact match combined with a regex match
-container_memory_usage_bytes{namespace="default", pod=~"web-.*"}
+container_memory_usage_bytes{namespace="openshift-monitoring", pod=~"prometheus-.*"}
 
 # Mix of exact and regex matches
-kube_pod_info{namespace="production", node!~"worker-0.*"}
+kube_pod_info{namespace="openshift-monitoring", node!~"worker-0.*"}
 ----
 
 == Regular Expression Patterns
@@ -123,7 +125,7 @@ OpenShift 4.16 adds several useful labels to metrics. Understanding these helps 
 [source,promql]
 ----
 # All metrics in a specific namespace
-container_memory_usage_bytes{namespace="my-app"}
+container_memory_usage_bytes{namespace="openshift-monitoring"}
 
 # All metrics except system namespaces
 container_memory_usage_bytes{namespace!~"kube-.*|openshift-.*"}
@@ -135,10 +137,10 @@ container_memory_usage_bytes{namespace!~"kube-.*|openshift-.*"}
 ----
 # All pods for a specific deployment (kube_pod_info has no deployment label;
 # a Deployment's pods are created by a ReplicaSet named <deployment>-<hash>)
-kube_pod_info{created_by_kind="ReplicaSet", created_by_name=~"web-server-.*", namespace="production"}
+kube_pod_info{created_by_kind="ReplicaSet", created_by_name=~"thanos-querier-.*", namespace="openshift-monitoring"}
 
 # Pods matching a naming pattern
-container_cpu_usage_seconds_total{pod=~"web-server-.*"}
+container_cpu_usage_seconds_total{pod=~"thanos-querier-.*"}
 ----
 
 == Combining Queries with Operators
@@ -150,23 +152,23 @@ You can combine multiple queries using arithmetic and comparison operators.
 [source,promql]
 ----
 # Add two metrics
-sum(container_memory_usage_bytes{namespace="app1"}) + sum(container_memory_usage_bytes{namespace="app2"})
+sum(container_memory_usage_bytes{namespace="openshift-monitoring", container!=""}) + sum(container_memory_usage_bytes{namespace="openshift-ingress", container!=""})
 
 # Multiply by a scalar
-container_memory_usage_bytes{namespace="my-app"} * 1024
+container_memory_usage_bytes{namespace="openshift-monitoring"} * 1024
 ----
 
 === Comparison Operators
 
-Comparison operators filter the results, keeping only the time series for which the comparison is true (add the `bool` modifier to return 1 for true, 0 for false instead):
+Comparison operators filter the results, keeping only the time series for which the comparison is true (add the `bool` modifier to return 1 for true, 0 for false instead). The `container!=""` and `container!="POD"` matchers skip the series that cAdvisor also reports for whole pods, node-level cgroups and each pod's pause container, so that every result is a container:
 
 [source,promql]
 ----
 # Find containers using more than 1GB of memory
-container_memory_usage_bytes > 1073741824
+container_memory_usage_bytes{container!="", container!="POD"} > 1073741824
 
 # Find containers using less than 100MB
-container_memory_usage_bytes < 104857600
+container_memory_usage_bytes{container!="", container!="POD"} < 104857600
 ----
 
 == Best Practices for Selectors
@@ -191,10 +193,10 @@ Simple regex patterns are faster than complex ones:
 [source,promql]
 ----
 # Good: Simple prefix match
-pod=~"web-.*"
+kube_pod_info{pod=~"web-.*"}
 
 # Less efficient: Complex pattern
-pod=~".*web.*server.*v[0-9]+.*"
+kube_pod_info{pod=~".*web.*server.*v[0-9]+.*"}
 ----
 
 === Avoid Overly Broad Negations

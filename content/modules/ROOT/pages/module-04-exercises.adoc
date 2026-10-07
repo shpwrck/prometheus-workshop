@@ -120,11 +120,11 @@ Practice using logical operators to combine conditions.
 
 === Step 1: AND Operator
 
-Find containers that have both memory and CPU metrics:
+Find containers that have both memory and CPU metrics. `ignoring(cpu)` is needed because only the CPU metric has a `cpu` label:
 
 [source,promql]
 ----
-container_memory_usage_bytes and container_cpu_usage_seconds_total
+container_memory_usage_bytes and ignoring(cpu) container_cpu_usage_seconds_total
 ----
 
 How many containers match this condition?
@@ -135,16 +135,16 @@ Find containers with memory metrics but no CPU metrics:
 
 [source,promql]
 ----
-container_memory_usage_bytes unless container_cpu_usage_seconds_total
+container_memory_usage_bytes unless ignoring(cpu) container_cpu_usage_seconds_total
 ----
 
 === Step 3: Complex Logical Expression
 
-Combine multiple conditions. For example, find memory usage for containers in production namespaces that also have CPU metrics:
+Combine multiple conditions. For example, find memory usage for containers in OpenShift namespaces that also have CPU metrics:
 
 [source,promql]
 ----
-container_memory_usage_bytes{namespace=~"prod.*"} and container_cpu_usage_seconds_total
+container_memory_usage_bytes{namespace=~"openshift-.*"} and ignoring(cpu) container_cpu_usage_seconds_total
 ----
 
 == Exercise 5: Mathematical Functions
@@ -171,27 +171,27 @@ round(container_memory_usage_bytes / 1048576)
 
 === Step 3: Calculate Percentage
 
-If you have limit metrics, calculate memory usage as a percentage:
+Calculate memory usage as a percentage of the limit, for the containers that have a memory limit (`> 0` drops containers without a limit, which would otherwise give `+Inf` or `NaN`):
 
 [source,promql]
 ----
-100 * container_memory_usage_bytes / container_spec_memory_limit_bytes
+100 * container_memory_working_set_bytes{container!=""} / (container_spec_memory_limit_bytes{container!=""} > 0)
 ----
 
 == Exercise 6: Advanced OpenShift Patterns
 
 Practice writing advanced queries for OpenShift-specific monitoring scenarios.
 
-=== Step 1: CPU Utilization Percentage
+=== Step 1: CPU Usage Percentage
 
-Calculate CPU utilization as a percentage per namespace:
+Calculate CPU usage per namespace as a percentage of one CPU core (200 means two fully used cores):
 
 [source,promql]
 ----
-sum(100 * rate(container_cpu_usage_seconds_total[5m])) by (namespace)
+sum(100 * rate(container_cpu_usage_seconds_total{container!="", container!="POD"}[5m])) by (namespace)
 ----
 
-Which namespace has the highest CPU utilization?
+Which namespace has the highest CPU usage?
 
 === Step 2: Pod Restart Rate
 
@@ -210,14 +210,14 @@ Find the top 5 containers by memory usage, showing their current values:
 
 [source,promql]
 ----
-topk(5, container_memory_usage_bytes)
+topk(5, container_memory_working_set_bytes{container!=""})
 ----
 
 Now find the top 5 by average memory usage over the last hour:
 
 [source,promql]
 ----
-topk(5, avg_over_time(container_memory_usage_bytes[1h]))
+topk(5, avg_over_time(container_memory_working_set_bytes{container!=""}[1h]))
 ----
 
 Compare the results. Are they the same?
@@ -228,12 +228,12 @@ Practice optimizing queries for better performance.
 
 === Step 1: Compare Range Durations
 
-Compare query execution time for different range durations:
+Compare query execution time for different range durations. A range must contain at least two samples for `rate()` to return a value, so make it at least twice the scrape interval; OpenShift scrapes some targets only once a minute, so a `[1m]` range can return nothing:
 
 [source,promql]
 ----
 # Short range
-rate(http_requests_total[1m])
+rate(http_requests_total[5m])
 
 # Longer range
 rate(http_requests_total[15m])
@@ -294,13 +294,13 @@ Start with a simple query and build up complexity:
 container_memory_usage_bytes
 
 # Step 2: Add filter
-container_memory_usage_bytes{namespace="default"}
+container_memory_usage_bytes{namespace="openshift-monitoring", container!="", container!="POD"}
 
 # Step 3: Add aggregation
-sum(container_memory_usage_bytes{namespace="default"})
+sum(container_memory_usage_bytes{namespace="openshift-monitoring", container!="", container!="POD"})
 
 # Step 4: Add a function (memory is a gauge, so use deriv() rather than rate())
-sum(deriv(container_memory_usage_bytes{namespace="default"}[5m]))
+sum(deriv(container_memory_usage_bytes{namespace="openshift-monitoring", container!="", container!="POD"}[5m]))
 ----
 
 === Step 3: Validate Label Values

@@ -7,6 +7,8 @@ In this exercise, you will practice writing queries with label selectors to filt
 
 === Step 1: Access Prometheus
 
+Run the queries in these exercises in the OpenShift web console under *Observe* -> *Metrics*. Alternatively, if you are a cluster administrator, you can use the Prometheus UI through a port-forward (regular users are not allowed to create port-forwards in the `openshift-monitoring` namespace):
+
 1. Open a terminal and authenticate to your OpenShift cluster:
 +
 [source,bash]
@@ -25,22 +27,22 @@ oc port-forward -n openshift-monitoring pod/prometheus-k8s-0 9090:9090
 
 === Step 2: Query Container Memory Usage
 
-Write a query to find all container memory usage metrics in the `default` namespace:
+Write a query to find all container memory usage metrics in the `openshift-monitoring` namespace:
 
 [source,promql]
 ----
-container_memory_usage_bytes{namespace="default"}
+container_memory_usage_bytes{namespace="openshift-monitoring"}
 ----
 
-Execute this query in the Prometheus UI and observe the results.
+Execute this query and observe the results.
 
 === Step 3: Filter by Pod Pattern
 
-Modify the query to only show metrics for pods whose names start with "web-":
+Modify the query to only show metrics for pods whose names start with "prometheus-":
 
 [source,promql]
 ----
-container_memory_usage_bytes{namespace="default", pod=~"^web-.*"}
+container_memory_usage_bytes{namespace="openshift-monitoring", pod=~"^prometheus-.*"}
 ----
 
 === Step 4: Exclude System Namespaces
@@ -54,7 +56,7 @@ container_cpu_usage_seconds_total{namespace!~"kube-.*|openshift-.*"}
 
 == Exercise 2: Regular Expression Patterns
 
-Practice using regular expressions to match patterns in label values.
+Practice using regular expressions to match patterns in label values. The pod and deployment names in these steps are examples; if nothing in your cluster matches, adjust the patterns to your own pod names.
 
 === Step 1: Match Pod Names with Version Numbers
 
@@ -89,29 +91,29 @@ Practice combining multiple label selectors and operators.
 
 === Step 1: Filter by Multiple Conditions
 
-Write a query to find container memory usage in the "production" namespace for containers with names starting with "app-":
+Write a query to find container memory usage in the "openshift-monitoring" namespace for containers with names starting with "kube-rbac-proxy":
 
 [source,promql]
 ----
-container_memory_usage_bytes{namespace="production", container=~"^app-.*"}
+container_memory_usage_bytes{namespace="openshift-monitoring", container=~"^kube-rbac-proxy.*"}
 ----
 
 === Step 2: Use Comparison Operators
 
-Find all containers using more than 500MB of memory:
+Find all containers using more than 500MB of memory (`container!=""` and `container!="POD"` skip the per-pod and pause-container series):
 
 [source,promql]
 ----
-container_memory_usage_bytes > 524288000
+container_memory_usage_bytes{container!="", container!="POD"} > 524288000
 ----
 
 === Step 3: Combine Filters and Comparisons
 
-Find containers in the "production" namespace using more than 1GB of memory:
+Find containers in the "openshift-monitoring" namespace using more than 1GB of memory:
 
 [source,promql]
 ----
-container_memory_usage_bytes{namespace="production"} > 1073741824
+container_memory_usage_bytes{namespace="openshift-monitoring", container!="", container!="POD"} > 1073741824
 ----
 
 == Exercise 4: OpenShift-Specific Queries
@@ -147,12 +149,14 @@ oc get nodes
 
 === Step 3: Query Build Information
 
-Query OpenShift build information for builds in a specific namespace:
+Query the current phase of each OpenShift build in a specific namespace. `openshift_build_status_phase_total` has one series per build and phase, and the series for the build's current phase has the value 1:
 
 [source,promql]
 ----
-openshift_build_info{namespace="your-namespace"}
+openshift_build_status_phase_total{namespace="your-namespace"} == 1
 ----
+
+This query returns data only if the namespace contains builds.
 
 == Verification
 

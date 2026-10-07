@@ -52,11 +52,11 @@ This returns all time series with the metric name `http_requests_total`.
 
 Label selectors filter time series by matching label values. Use curly braces `{}` to specify label filters.
 
-Select all HTTP requests for a specific instance:
+Select all Kubernetes API server requests for a specific resource:
 
 [source,promql]
 ----
-http_requests_total{instance="localhost:9090"}
+apiserver_request_total{resource="pods"}
 ----
 
 === Label Matching Operators
@@ -73,16 +73,16 @@ Examples:
 [source,promql]
 ----
 # Exact match
-http_requests_total{method="GET"}
+apiserver_request_total{verb="GET"}
 
 # Not equal
-http_requests_total{method!="GET"}
+apiserver_request_total{verb!="GET"}
 
 # Regular expression match
-http_requests_total{method=~"GET|POST"}
+apiserver_request_total{verb=~"GET|POST"}
 
 # Regular expression not match
-http_requests_total{method!~"GET|POST"}
+apiserver_request_total{verb!~"GET|POST"}
 ----
 
 == Data Types
@@ -97,7 +97,7 @@ Example:
 
 [source,promql]
 ----
-http_requests_total{method="GET"}
+apiserver_request_total{verb="GET"}
 ----
 
 === Range Vector
@@ -108,8 +108,10 @@ Example:
 
 [source,promql]
 ----
-http_requests_total{method="GET"}[5m]
+apiserver_request_total{verb="GET"}[5m]
 ----
+
+NOTE: Graphs, such as the one on the *Observe* -> *Metrics* page or the *Graph* tab of the Prometheus UI, are drawn with range queries, and a range query cannot return a range vector (`invalid expression type "range vector" for range query`). Run expressions that end in `[5m]` and similar as instant queries, for example in the *Table* tab of the Prometheus UI, or pass them to a function such as `rate()`.
 
 === Scalar
 
@@ -151,11 +153,12 @@ In OpenShift 4.16, you can access Prometheus through the web console or via the 
 === Accessing the Prometheus Web UI
 
 1. Log in to your OpenShift cluster web console
-2. Navigate to the `openshift-monitoring` namespace
-3. Find the Prometheus service or route
-4. Access the Prometheus UI
+2. In the *Administrator* perspective, navigate to *Observe* -> *Metrics*
+3. Enter a PromQL expression and click *Run queries*
 
-Alternatively, you can port-forward to a Prometheus pod (the `prometheus-k8s` service does not expose port 9090):
+The `prometheus-k8s` route in the `openshift-monitoring` namespace serves only the `/api` path, so it cannot be used to open the Prometheus UI. Querying metrics from all namespaces requires the `cluster-monitoring-view` cluster role.
+
+Alternatively, cluster administrators can port-forward to a Prometheus pod (the `prometheus-k8s` service does not expose port 9090). Regular users are not allowed to create port-forwards in the `openshift-monitoring` namespace.
 
 [source,bash]
 ----
@@ -182,11 +185,11 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 OpenShift 4.16 exposes many useful metrics. Here are some common ones:
 
-* `container_cpu_usage_seconds_total` - CPU usage per container
+* `container_cpu_usage_seconds_total` - Cumulative CPU time used per container, in seconds (a counter)
 * `container_memory_usage_bytes` - Memory usage per container
 * `kube_pod_info` - Pod information
 * `kube_node_info` - Node information
-* `openshift_build_info` - Build information
+* `openshift_build_status_phase_total` - Phase of each OpenShift build (one series per build and phase)
 * `cluster:capacity_cpu_cores:sum` - Total CPU capacity
 
 == Summary

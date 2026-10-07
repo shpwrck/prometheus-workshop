@@ -3,7 +3,7 @@
 
 == Exercise 1: Basic Aggregations
 
-Practice using basic aggregation functions to summarize metrics.
+Practice using basic aggregation functions to summarize metrics. As in the module content, the queries use `container!=""` and `container!="POD"` so that each series is exactly one container, and `rate()` to turn the CPU counter into current CPU usage.
 
 === Step 1: Sum Aggregation
 
@@ -11,7 +11,7 @@ Write a query to calculate the total memory usage across all containers in your 
 
 [source,promql]
 ----
-sum(container_memory_usage_bytes)
+sum(container_memory_working_set_bytes{container!="", container!="POD"})
 ----
 
 Execute this query in Prometheus and observe the result.
@@ -22,7 +22,7 @@ Modify the query to show total memory usage per namespace:
 
 [source,promql]
 ----
-sum(container_memory_usage_bytes) by (namespace)
+sum(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Compare the results with the previous query. How many namespaces do you have?
@@ -33,7 +33,7 @@ Write a query to calculate the average memory usage per namespace:
 
 [source,promql]
 ----
-avg(container_memory_usage_bytes) by (namespace)
+avg(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Compare the average with the sum. What insights can you draw?
@@ -48,7 +48,7 @@ Find the maximum memory usage per namespace:
 
 [source,promql]
 ----
-max(container_memory_usage_bytes) by (namespace)
+max(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Which namespace has the highest maximum memory usage?
@@ -59,7 +59,7 @@ Find the minimum memory usage per namespace:
 
 [source,promql]
 ----
-min(container_memory_usage_bytes) by (namespace)
+min(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 === Step 3: Count Containers
@@ -68,7 +68,7 @@ Count the number of containers per namespace:
 
 [source,promql]
 ----
-count(container_memory_usage_bytes) by (namespace)
+count(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Which namespace has the most containers?
@@ -83,7 +83,7 @@ Calculate the median (50th percentile) memory usage per namespace:
 
 [source,promql]
 ----
-quantile(0.50, container_memory_usage_bytes) by (namespace)
+quantile(0.50, container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 === Step 2: 95th Percentile
@@ -92,7 +92,7 @@ Calculate the 95th percentile memory usage per namespace:
 
 [source,promql]
 ----
-quantile(0.95, container_memory_usage_bytes) by (namespace)
+quantile(0.95, container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Compare this with the maximum values. What does this tell you about the distribution?
@@ -103,7 +103,7 @@ Calculate the standard deviation of memory usage per namespace:
 
 [source,promql]
 ----
-stddev(container_memory_usage_bytes) by (namespace)
+stddev(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace)
 ----
 
 Which namespace has the most variable memory usage?
@@ -118,7 +118,7 @@ Find the top 5 containers by memory usage:
 
 [source,promql]
 ----
-topk(5, container_memory_usage_bytes)
+topk(5, container_memory_working_set_bytes{container!="", container!="POD"})
 ----
 
 Note which containers are using the most memory.
@@ -129,7 +129,7 @@ Find the top 3 namespaces by total memory usage:
 
 [source,promql]
 ----
-topk(3, sum(container_memory_usage_bytes) by (namespace))
+topk(3, sum(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace))
 ----
 
 === Step 3: Bottom 5 CPU Consumers
@@ -138,7 +138,7 @@ Find the bottom 5 containers by CPU usage:
 
 [source,promql]
 ----
-bottomk(5, container_cpu_usage_seconds_total)
+bottomk(5, rate(container_cpu_usage_seconds_total{container!="", container!="POD"}[5m]))
 ----
 
 == Exercise 5: Combining Aggregations
@@ -151,18 +151,18 @@ Calculate the average of the maximum memory usage per pod, grouped by namespace:
 
 [source,promql]
 ----
-avg(max(container_memory_usage_bytes) by (namespace, pod)) by (namespace)
+avg(max(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace, pod)) by (namespace)
 ----
 
 This shows the average peak memory usage per pod in each namespace.
 
 === Step 2: Filtered Aggregation
 
-Calculate the total memory usage only for namespaces that match a specific pattern (e.g., starting with "app-"):
+Calculate the total memory usage only for namespaces that match a specific pattern (e.g., starting with "openshift-"):
 
 [source,promql]
 ----
-sum(container_memory_usage_bytes{namespace=~"^app-.*"}) by (namespace)
+sum(container_memory_working_set_bytes{namespace=~"^openshift-.*", container!="", container!="POD"}) by (namespace)
 ----
 
 Adjust the pattern to match namespaces in your cluster.
@@ -173,7 +173,7 @@ Group memory usage by both namespace and node:
 
 [source,promql]
 ----
-sum(container_memory_usage_bytes) by (namespace, node)
+sum(container_memory_working_set_bytes{container!="", container!="POD"}) by (namespace, node)
 ----
 
 This shows how memory is distributed across nodes within each namespace.
@@ -197,7 +197,7 @@ Calculate the total CPU usage per node:
 
 [source,promql]
 ----
-sum(container_cpu_usage_seconds_total) by (node)
+sum(rate(container_cpu_usage_seconds_total{container!="", container!="POD"}[5m])) by (node)
 ----
 
 Which node has the highest CPU usage?
@@ -208,7 +208,7 @@ Calculate the average memory usage per node:
 
 [source,promql]
 ----
-avg(container_memory_usage_bytes) by (node)
+avg(container_memory_working_set_bytes{container!="", container!="POD"}) by (node)
 ----
 
 Compare this with the total CPU per node. Are the nodes balanced?
