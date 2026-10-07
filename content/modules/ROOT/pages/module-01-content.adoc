@@ -162,7 +162,7 @@ Alternatively, you can port-forward to a Prometheus pod (the `prometheus-k8s` se
 oc port-forward -n openshift-monitoring pod/prometheus-k8s-0 9090:9090
 ----
 
-Then access Prometheus at `http://localhost:9090`.
+Then open `http://localhost:9090/graph` (Prometheus 2.x, as shipped with OpenShift 4.16) or `http://localhost:9090/query` (Prometheus 3.x). Do not open the bare `http://localhost:9090`: it redirects to the web console's `/monitoring` path, which returns 404 through the port-forward.
 
 === Using the Prometheus API
 

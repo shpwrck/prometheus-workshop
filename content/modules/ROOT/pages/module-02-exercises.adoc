@@ -21,7 +21,7 @@ oc login <your-cluster-url>
 oc port-forward -n openshift-monitoring pod/prometheus-k8s-0 9090:9090
 ----
 
-3. Open your browser and navigate to `http://localhost:9090`
+3. Open your browser and navigate to `http://localhost:9090/graph` (on Prometheus 3.x, use `http://localhost:9090/query`; the bare `http://localhost:9090` redirects to a path that returns 404 through the port-forward)
 
 === Step 2: Query Container Memory Usage
 
